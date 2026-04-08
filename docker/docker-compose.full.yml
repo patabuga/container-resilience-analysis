@@ -1,0 +1,50 @@
+version: '3.8'
+
+# Docker Compose - Full Stack with Load Tools
+# Includes: WordPress + MariaDB + Nginx + Observability + stress-ng + JMeter
+
+include:
+  - docker-compose.yml
+
+services:
+  # ============================================================
+  # NOISE GENERATOR: stress-ng
+  # ============================================================
+
+  stress-ng:
+    image: polinux/stress-ng:latest
+    container_name: cra-stress-ng
+    restart: "no"
+    profiles:
+      - stress
+    command:
+      - --cpu
+      - "2"
+      - --cpu-load
+      - "50"
+      - --timeout
+      - "300s"
+      - --metrics-brief
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+
+  # ============================================================
+  # LOAD GENERATOR: JMeter
+  # ============================================================
+
+  jmeter:
+    image: apache/jmeter:5.6
+    container_name: cra-jmeter
+    restart: "no"
+    profiles:
+      - load
+    volumes:
+      - ../jmeter/plans:/plans:ro
+      - ../jmeter/results:/results:rw
+      - ../jmeter/user-data:/data:ro
+    entrypoint: ["jmeter", "-n", "-t", "/plans/baseline-test.jmx", "-l", "/results/results.jtl", "-e", "-o", "/results/report"]
+    networks:
+      - frontend

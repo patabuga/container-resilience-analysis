@@ -1,0 +1,139 @@
+# Prometheus Alerting Rules for Container Resilience Analysis
+# Paper A & B Alerts
+
+groups:
+  # ============================================================
+  # PAPER A: Resource Contention Alerts
+  # ============================================================
+  
+  - name: resource_contention
+    rules:
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 1m
+        labels:
+          severity: warning
+          paper: paper-a
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}% (threshold: 80%)"
+
+      # CPU Throttling Detection
+      - alert: CPUThrottling
+        expr: |
+          rate(container_cpu_cfs_throttled_seconds_total{container_label_com_docker_compose_service="wordpress"}[5m]) > 0
+        for: 30s
+        labels:
+          severity: critical
+          paper: paper-a
+        annotations:
+          summary: "CPU throttling detected on WordPress"
+          description: "WordPress container is being throttled"
+
+      # Memory Pressure
+      - alert: MemoryPressure
+        expr: |
+          (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 2m
+        labels:
+          severity: warning
+          paper: paper-a
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}%"
+
+      # Knee Point Warning
+      - alert: KneePointApproaching
+        expr: |
+          avg_over_time(rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_service="wordpress"}[1m])[5m]) > 0.7
+        for: 1m
+        labels:
+          severity: warning
+          paper: paper-a
+        annotations:
+          summary: "Approaching knee point"
+          description: "WordPress CPU usage approaching critical threshold"
+
+  # ============================================================
+  # PAPER B: SPOF Mitigation Alerts
+  # ============================================================
+  
+  - name: spof_mitigation
+    rules:
+      # Nginx Upstream Down
+      - alert: NginxUpstreamDown
+        expr: |
+          nginx_upstream_down > 0
+        for: 10s
+        labels:
+          severity: critical
+          paper: paper-b
+        annotations:
+          summary: "Nginx upstream is down"
+          description: "Upstream {{ $labels.upstream }} is marked as down"
+
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(nginx_http_requests_total{status=~"5.."}[5m])) by (instance) /
+          sum(rate(nginx_http_requests_total[5m])) by (instance) > 0.05
+        for: 1m
+        labels:
+          severity: critical
+          paper: paper-b
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }}% (threshold: 5%)"
+
+      # Response Time Degradation
+      - alert: ResponseTimeDegradation
+        expr: |
+          histogram_quantile(0.95, sum(rate(nginx_http_request_duration_seconds_bucket[5m])) by (le)) > 2
+        for: 2m
+        labels:
+          severity: warning
+          paper: paper-b
+        annotations:
+          summary: "Response time degradation"
+          description: "P95 response time is {{ $value }}s"
+
+      # Container Restart Loop
+      - alert: ContainerRestartLoop
+        expr: |
+          increase(container_restart_count{container_label_com_docker_compose_service=~"nginx|wordpress|mariadb"}[10m]) > 3
+        for: 1m
+        labels:
+          severity: critical
+          paper: paper-b
+        annotations:
+          summary: "Container restart loop detected"
+          description: "{{ $labels.container_label_com_docker_compose_service }} has restarted {{ $value }} times"
+
+  # ============================================================
+  # SYSTEM HEALTH
+  # ============================================================
+  
+  - name: system_health
+    rules:
+      # Service Down
+      - alert: ServiceDown
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.instance }} has been down for more than 30 seconds"
+
+      # Disk Space Warning
+      - alert: DiskSpaceWarning
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 20
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is below 20%"

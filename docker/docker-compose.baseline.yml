@@ -1,0 +1,11 @@
+version: '3.8'
+
+# Docker Compose - Baseline Configuration (No Noise)
+# For Paper A Phase 1: Capacity Testing
+
+include:
+  - docker-compose.yml
+
+# Baseline runs with default resource limits
+# No stress-ng container running
+# Use: docker-compose -f docker-compose.baseline.yml up -d

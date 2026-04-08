@@ -1,0 +1,35 @@
+# Evidence data
+evidence/**/*.csv
+evidence/**/*.json
+evidence/**/*.log
+!evidence/**/.gitkeep
+
+# JMeter results
+jmeter/results/*.jtl
+jmeter/results/*.html
+
+# Environment files
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Logs
+*.log
+
+# Archives
+*.tar.gz
+*.zip

@@ -1,0 +1,99 @@
+# Prometheus Recording Rules for Container Resilience Analysis
+# Pre-computed metrics for dashboards and analysis
+
+groups:
+  # ============================================================
+  # PAPER A: Resource Contention Metrics
+  # ============================================================
+  
+  - name: paper_a_recording_rules
+    rules:
+      # CPU Usage Percentage
+      - record: container_cpu_usage_percent
+        expr: |
+          rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_service!=""}[5m]) * 100
+
+      # Memory Usage Percentage
+      - record: container_memory_usage_percent
+        expr: |
+          container_memory_usage_bytes / container_spec_memory_limit_bytes * 100
+
+      # CPU Throttling Rate
+      - record: cpu_throttling_rate
+        expr: |
+          rate(container_cpu_cfs_throttled_seconds_total[5m])
+
+      # Request Rate by Service
+      - record: request_rate
+        expr: |
+          sum(rate(nginx_http_requests_total[5m])) by (service)
+
+      # Response Time P95
+      - record: response_time_p95
+        expr: |
+          histogram_quantile(0.95, sum(rate(nginx_http_request_duration_seconds_bucket[5m])) by (le, service))
+
+      # Response Time P99
+      - record: response_time_p99
+        expr: |
+          histogram_quantile(0.99, sum(rate(nginx_http_request_duration_seconds_bucket[5m])) by (le, service))
+
+      # Error Rate Percentage
+      - record: error_rate_percent
+        expr: |
+          sum(rate(nginx_http_requests_total{status=~"5.."}[5m])) by (service) /
+          sum(rate(nginx_http_requests_total[5m])) by (service) * 100
+
+      # Knee Point Detection (derivative of response time)
+      - record: knee_point_indicator
+        expr: |
+          deriv(response_time_p95[5m])
+
+  # ============================================================
+  # PAPER B: SPOF Mitigation Metrics
+  # ============================================================
+  
+  - name: paper_b_recording_rules
+    rules:
+      # Upstream Health Status
+      - record: upstream_health_status
+        expr: |
+          nginx_upstream_down == 0
+
+      # Upstream Response Time
+      - record: upstream_response_time
+        expr: |
+          sum(nginx_upstream_response_time_seconds) by (upstream)
+
+      # Service Availability Percentage
+      - record: service_availability_percent
+        expr: |
+          avg_over_time(up{job=~"nginx|wordpress|mariadb"}[1h]) * 100
+
+      # Time to Recovery (based on restart events)
+      - record: time_to_recovery_seconds
+        expr: |
+          timestamp(container_last_seen{container_label_com_docker_compose_service}) -
+          timestamp(container_start_time_seconds{container_label_com_docker_compose_service})
+
+      # Connection Pool Utilization
+      - record: connection_pool_utilization
+        expr: |
+          nginx_connections_active / nginx_connections_reading * 100
+
+  # ============================================================
+  # COMMON METRICS
+  # ============================================================
+  
+  - name: common_recording_rules
+    rules:
+      # Total Requests Per Second
+      - record: total_rps
+        expr: |
+          sum(rate(nginx_http_requests_total[1m]))
+
+      # Average Response Time
+      - record: avg_response_time
+        expr: |
+          sum(rate(nginx_http_request_duration_seconds_sum[5m])) /
+          sum(rate(nginx_http_request_duration_seconds_count[5m]))

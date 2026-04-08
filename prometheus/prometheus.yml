@@ -1,0 +1,80 @@
+# Prometheus Configuration for Container Resilience Analysis
+# Scrape interval: 5s for high-resolution metrics
+
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+  external_labels:
+    monitor: 'container-resilience-analysis'
+
+# Rule files
+rule_files:
+  - /etc/prometheus/rules/alerting-rules.yml
+  - /etc/prometheus/rules/recording-rules.yml
+
+# Alertmanager (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# Scrape configurations
+scrape_configs:
+  # ============================================================
+  # CONTAINER METRICS (Paper A - Resource Contention)
+  # ============================================================
+  
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 5s
+    metrics_path: /metrics
+    relabel_configs:
+      - source_labels: [__name__]
+        regex: 'container_.*'
+        action: keep
+
+  # ============================================================
+  # HOST METRICS
+  # ============================================================
+  
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 5s
+
+  # ============================================================
+  # NGINX METRICS (Paper B - SPOF Mitigation)
+  # ============================================================
+  
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: /nginx_status
+    scrape_interval: 5s
+
+  # ============================================================
+  # PROMETHEUS SELF-MONITORING
+  # ============================================================
+  
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # ============================================================
+  # WORDPRESS APPLICATION
+  # ============================================================
+  
+  - job_name: 'wordpress'
+    static_configs:
+      - targets: ['wordpress:80']
+    scrape_interval: 10s
+    metrics_path: /wp-json/wp/v2/metrics
+
+  # ============================================================
+  # MARIADB (via mysqld_exporter - optional)
+  # ============================================================
+  
+  # - job_name: 'mariadb'
+  #   static_configs:
+  #     - targets: ['mariadb-exporter:9104']
