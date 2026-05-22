@@ -73,8 +73,8 @@ groups:
       # Time to Recovery (based on restart events)
       - record: time_to_recovery_seconds
         expr: |
-          timestamp(container_last_seen{container_label_com_docker_compose_service}) -
-          timestamp(container_start_time_seconds{container_label_com_docker_compose_service})
+          timestamp(container_last_seen{container_label_com_docker_compose_service!=""}) -
+          timestamp(container_start_time_seconds{container_label_com_docker_compose_service!=""})
 
       # Connection Pool Utilization
       - record: connection_pool_utilization

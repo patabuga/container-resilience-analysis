@@ -51,7 +51,7 @@ echo ""
 echo "[3/5] Running JMeter step-up test (10-1000 VU)..."
 
 if [ -f "${PROJECT_DIR}/jmeter/plans/baseline-test.jmx" ]; then
-    /opt/jmeter/bin/jmeter.sh \
+    jmeter \
         -n \
         -t "${PROJECT_DIR}/jmeter/plans/baseline-test.jmx" \
         -l "${EVIDENCE_DIR}/raw-data/jmeter-results-${TIMESTAMP}.jtl" \

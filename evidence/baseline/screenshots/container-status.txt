@@ -1,0 +1,9 @@
+NAMES               STATUS                    PORTS
+cra-prometheus      Up 2 minutes (healthy)    0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp
+cra-nginx           Up 15 minutes (healthy)   0.0.0.0:80->80/tcp, [::]:80->80/tcp
+cra-wordpress       Up 12 minutes (healthy)   80/tcp
+cra-grafana         Up 38 minutes             0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+cra-mariadb         Up 38 minutes (healthy)   3306/tcp
+cra-cadvisor        Up 38 minutes (healthy)   
+cra-node-exporter   Up 38 minutes             0.0.0.0:9100->9100/tcp, [::]:9100->9100/tcp
+vaultwarden         Up 38 minutes (healthy)   

@@ -23,12 +23,11 @@ services:
   # ============================================================
   
   nginx:
-    image: nginx:1.25-alpine
+    image: nginx:alpine
     container_name: cra-nginx
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ../nginx/conf.d:/etc/nginx/conf.d:ro
@@ -40,7 +39,7 @@ services:
       - frontend
       - backend
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -52,7 +51,7 @@ services:
           memory: 256M
 
   wordpress:
-    image: wordpress:6.4-php8.2-apache
+    image: wordpress:latest
     container_name: cra-wordpress
     restart: unless-stopped
     environment:
@@ -62,7 +61,6 @@ services:
       WORDPRESS_DB_PASSWORD: ${WP_DB_PASSWORD:-research2024}
     volumes:
       - wordpress_data:/var/www/html
-      - ../wordpress/wp-config.php:/var/www/html/wp-config.php:ro
     depends_on:
       mariadb:
         condition: service_healthy
@@ -110,7 +108,7 @@ services:
   # ============================================================
 
   prometheus:
-    image: prom/prometheus:v2.48.0
+    image: prom/prometheus:latest
     container_name: cra-prometheus
     restart: unless-stopped
     ports:
@@ -127,6 +125,7 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
     networks:
       - monitoring
+      - backend
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
@@ -134,7 +133,7 @@ services:
       retries: 3
 
   grafana:
-    image: grafana/grafana:10.2.0
+    image: grafana/grafana:latest
     container_name: cra-grafana
     restart: unless-stopped
     ports:
@@ -147,7 +146,7 @@ services:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-research2024}
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=http://grafana.sbox.patabuga.co
+      - GF_SERVER_ROOT_URL=http://localhost:3000
     depends_on:
       - prometheus
     networks:
@@ -168,7 +167,7 @@ services:
       - monitoring
 
   node_exporter:
-    image: prom/node-exporter:v1.7.0
+    image: prom/node-exporter:latest
     container_name: cra-node-exporter
     restart: unless-stopped
     ports:

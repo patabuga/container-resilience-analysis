@@ -1,0 +1,8 @@
+NAMES               STATUS
+cra-wordpress       Up 19 minutes (healthy)
+cra-grafana         Up 19 minutes
+cra-mariadb         Up 19 minutes (healthy)
+cra-prometheus      Up 19 minutes (healthy)
+cra-cadvisor        Up 19 minutes (healthy)
+cra-node-exporter   Up 19 minutes
+vaultwarden         Up 19 minutes (healthy)

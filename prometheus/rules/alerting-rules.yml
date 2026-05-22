@@ -47,7 +47,7 @@ groups:
       # Knee Point Warning
       - alert: KneePointApproaching
         expr: |
-          avg_over_time(rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_service="wordpress"}[1m])[5m]) > 0.7
+          rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_service="wordpress"}[5m]) > 0.7
         for: 1m
         labels:
           severity: warning
